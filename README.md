@@ -139,14 +139,25 @@ Optimized for all devices:
 
 Built for production deployment:
 ```bash
-npm run build
-npm run preview
+```
+# Build
+sui move build --path ecosui-move
+
+# Publish (ensure sufficient gas and a current CLI)
+sui client publish --json --skip-fetch-latest-git-deps --gas-budget 50000000 --path ecosui-move
 ```
 
-## 📄 License
+Notes:
 
-Built for positive environmental and social impact in Kenya.
+- Ensure your Sui CLI matches the network protocol to avoid system-package warnings.
+- Fund or merge a gas coin large enough for the chosen `--gas-budget`.
+- After publishing, save the returned `PACKAGE_ID` for the frontend config.
 
----
+## Object IDs to Record (post-deploy)
 
-**EcoSui**: We're not just tracking carbon. We're trading dignity. 🌱
+- `PACKAGE_ID` of this Move package.
+- Any initialized app objects (if created):
+  - `Marketplace`
+  - `Treasury`, `PlatformTreasury`
+  - `Community`(ies), `Oracle`(s)
+- Framework shared `Clock` object ID for the active network.
