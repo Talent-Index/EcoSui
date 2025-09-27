@@ -1,3 +1,6 @@
+### EcoSui Interface
+![EcoSui Application](https://github.com/Talent-Index/EcoSui/raw/main/WhatsApp%20Image%202025-09-27%20at%2003.38.46_7e7a8274.jpg)
+
 # EcoSui - Breathing Value into Kenya's Pollution Crisis
 
 **Experience EcoSui Live:** [https://eco-sui-ke.netlify.app/](https://eco-sui-ke.netlify.app/)
