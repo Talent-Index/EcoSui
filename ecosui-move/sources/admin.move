@@ -1,7 +1,7 @@
 module ecosui::admin {
-    use sui::object::{Self, UID};
-    use sui::tx_context::{Self, TxContext};
-    use sui::transfer;
+    
+    
+    
     use sui::event;
     use sui::clock;
 
@@ -50,12 +50,12 @@ module ecosui::admin {
     }
 
     // ===== ACCESS CONTROL =====
-    public fun assert_admin(admin_cap: &AdminCap, sender: address): bool {
+    public fun assert_admin(_admin_cap: &AdminCap, _sender: address): bool {
         // In production, implement proper signature verification
         true
     }
 
-    public entry fun update_system_config(
+    public fun update_system_config(
         _admin_cap: &AdminCap,
         system_config: &mut SystemConfig,
         fee_percentage: u64,
@@ -69,7 +69,7 @@ module ecosui::admin {
         event::emit(ConfigUpdatedEvent { fee_percentage, max_credit_amount, min_credit_amount });
     }
 
-    public entry fun pause_system(
+    public fun pause_system(
         _admin_cap: &AdminCap,
         system_config: &mut SystemConfig,
         pause: bool,

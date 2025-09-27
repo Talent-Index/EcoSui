@@ -1,7 +1,7 @@
 module ecosui::marketplace {
-    use sui::object::{Self, UID, ID};
-    use sui::transfer;
-    use sui::tx_context::{Self, TxContext};
+    
+    
+    
     use sui::event;
     use sui::coin::{Self, Coin};
     use sui::sui::SUI;
@@ -69,7 +69,7 @@ module ecosui::marketplace {
 
     // ===== LISTING MANAGEMENT =====
     
-    public entry fun create_listing(
+    public fun create_listing(
         marketplace: &mut Marketplace,
         credit: &CarbonCredit,
         price: u64,
@@ -102,7 +102,7 @@ module ecosui::marketplace {
         transfer::transfer(listing, tx_context::sender(ctx));
     }
 
-    public entry fun cancel_listing(
+    public fun cancel_listing(
         _marketplace: &mut Marketplace,
         listing: &mut Listing,
         clock: &clock::Clock,
@@ -120,7 +120,7 @@ module ecosui::marketplace {
 
     // ===== TRADE EXECUTION =====
     
-    public entry fun execute_trade(
+    public fun execute_trade(
         marketplace: &mut Marketplace,
         listing: &mut Listing,
         credit: CarbonCredit,
