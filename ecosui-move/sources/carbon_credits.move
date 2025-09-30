@@ -72,8 +72,8 @@ module ecosui::carbon_credits {
 
     // ===== CONSTANTS =====
     
-    const _ERROR_NOT_ORACLE: u64 = 1;
-    const _ERROR_INVALID_COMMUNITY: u64 = 2;
+    const ERROR_NOT_ORACLE: u64 = 1;
+    const ERROR_INVALID_COMMUNITY: u64 = 2;
     const ERROR_CREDIT_INACTIVE: u64 = 3;
     const ERROR_UNAUTHORIZED: u64 = 4;
     const ERROR_ORACLE_INACTIVE: u64 = 5;

@@ -161,3 +161,6 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 >>>>>>> 03b906a546a9a936a62ebff114cacce0c56a1c0f
+branch_structure.json
+temp_auto_push.bat
+temp_interactive_push.bat

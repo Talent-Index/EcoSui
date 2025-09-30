@@ -1,11 +1,15 @@
 module ecosui::governance {
-    use sui::object::{Self, UID};
-    use sui::transfer;
-    use sui::tx_context::{Self, TxContext};
+    
+    
+    
     use sui::event;
-    use std::vector;
+    
     use std::string::String;
     use sui::clock;
+    use std::vector;
+    use sui::object::{Self as object, UID, ID};
+    use sui::transfer::{Self as transfer};
+    use sui::tx_context::{Self as tx_context, TxContext};
 
     // ===== STRUCTURES =====
     
@@ -97,7 +101,7 @@ module ecosui::governance {
 
     // ===== PROPOSAL MANAGEMENT =====
     
-    public entry fun create_proposal(
+    public fun create_proposal(
         governance: &mut CommunityGovernance,
         title: String,
         description: String,
@@ -140,7 +144,7 @@ module ecosui::governance {
         transfer::transfer(proposal, tx_context::sender(ctx));
     }
 
-    public entry fun cast_vote(
+    public fun cast_vote(
         _governance: &CommunityGovernance,
         proposal: &mut Proposal,
         vote_type: bool,
@@ -176,7 +180,7 @@ module ecosui::governance {
         transfer::transfer(vote, tx_context::sender(ctx));
     }
 
-    public entry fun execute_proposal(
+    public fun execute_proposal(
         governance: &mut CommunityGovernance,
         proposal: &mut Proposal,
         clock: &clock::Clock

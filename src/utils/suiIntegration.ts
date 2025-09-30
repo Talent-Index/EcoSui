@@ -1,20 +1,22 @@
 // Sui blockchain integration utilities
 import { SuiClient, getFullnodeUrl } from '@mysten/sui.js/client'; // ✅ Match installed package
 
-// Contract configuration
-export const CONTRACT_CONFIG = {
-  // Replace with your actual package ID after deployment
-  PACKAGE_ID: (import.meta as any)?.env?.VITE_SUI_PACKAGE_ID || '0x1234567890abcdef1234567890abcdef12345678',
-  
-  // Contract addresses
-  CARBON_CREDIT_MODULE: 'carbon_credit',
-  EMISSION_TRACKER_MODULE: 'emission_tracker',
-  COMMUNITY_REWARDS_MODULE: 'community_rewards',
-  
-  // Network configuration
-  NETWORK: (((import.meta as any)?.env?.VITE_SUI_NETWORK) || 'testnet') as 'devnet' | 'testnet' | 'mainnet',
-  RPC_URL: getFullnodeUrl((((import.meta as any)?.env?.VITE_SUI_NETWORK) || 'testnet') as 'devnet' | 'testnet' | 'mainnet')
-};
+  // Contract configuration
+  export const CONTRACT_CONFIG = {
+    // Replace with your actual package ID after deployment
+    PACKAGE_ID: (import.meta as any)?.env?.VITE_SUI_PACKAGE_ID || '0x1234567890abcdef1234567890abcdef12345678',
+    
+    // Contract addresses
+    CARBON_CREDIT_MODULE: 'carbon_credit',
+    EMISSION_TRACKER_MODULE: 'emission_tracker',
+    COMMUNITY_REWARDS_MODULE: 'community_rewards',
+    
+    // Network configuration
+    NETWORK: (((import.meta as any)?.env?.VITE_SUI_NETWORK) || 'localnet') as 'localnet' | 'devnet' | 'testnet' | 'mainnet',
+    RPC_URL: ((((import.meta as any)?.env?.VITE_SUI_NETWORK) || 'localnet') === 'localnet')
+      ? 'http://127.0.0.1:9000'
+      : getFullnodeUrl((((import.meta as any)?.env?.VITE_SUI_NETWORK) || 'localnet') as 'devnet' | 'testnet' | 'mainnet')
+  };
 
 // Types for Sui integration
 export interface EmissionData {
