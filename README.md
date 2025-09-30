@@ -29,7 +29,7 @@ EcoSui connects Kenyan communities directly to global carbon markets, enabling r
 ## 🏗️ Project Structure
 
 ```markdown
-.
+EcoSui
 ├── .env.example
 ├── index.html
 ├── package.json
