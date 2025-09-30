@@ -7,12 +7,13 @@ import BlockchainSection from './components/BlockchainSection';
 import CommunitySection from './components/CommunitySection';
 import ContactSection from './components/ContactSection';
 import Footer from './components/Footer';
+import WalletPanel from './components/WalletPanel';
+
 import { suiIntegration } from './utils/suiIntegration';
 
 function App() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [suiReady, setSuiReady] = useState(false);
-
   useEffect(() => {
     // Initialize Sui integration
     const initializeSui = async () => {
@@ -38,6 +39,7 @@ function App() {
       <CommunitySection />
       <ContactSection />
       <Footer />
+      <WalletPanel />
       
       {/* Sui Integration Status */}
       <div className="fixed bottom-4 right-4 z-50">

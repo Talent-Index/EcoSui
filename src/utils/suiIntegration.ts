@@ -1,5 +1,5 @@
 // Sui blockchain integration utilities
-import { SuiClient, getFullnodeUrl } from '@mysten/sui.js/client'; // ✅ CORRECT IMPORT
+import { SuiClient, getFullnodeUrl } from '@mysten/sui.js/client'; // ✅ Match installed package
 
 // Contract configuration
 export const CONTRACT_CONFIG = {
@@ -17,21 +17,76 @@ export const CONTRACT_CONFIG = {
 };
 
 // Types for Sui integration
+export interface EmissionData {
+  co2_level: number;
+  particulate_matter: number;
+  temperature: number;
+  humidity: number;
+  sensor_id: string;
+  timestamp: number;
+}
+
 export interface CarbonCredit {
   id: string;
   amount: number;
-{{ ... }}
-  development_fund_allocation: number;
-  last_updated: number;
+  timestamp: number;
+  location: string;
+  verifier: string;
+  community_id: string;
+  emission_data: EmissionData;
+  development_fund_allocation?: number;
+  last_updated?: number;
 }
 
 // Sui Client singleton
 class SuiIntegration {
   private client: SuiClient | null = null;
   private wallet: any = null;
+  private address: string | null = null;
   private isConfigured(): boolean {
     const id = CONTRACT_CONFIG.PACKAGE_ID;
     return typeof id === 'string' && id.startsWith('0x') && id.length > 3 && id !== '0x1234567890abcdef1234567890abcdef12345678';
+  }
+
+  // Discover injected Sui wallet providers in the browser
+  listWalletProviders(): Array<{ id: string; name: string; provider: any }> {
+    if (typeof window === 'undefined') return [];
+    const w: any = window as any;
+
+    // Known provider candidates and their common global keys
+    const candidates: Array<{ id: string; name: string; key: string }> = [
+      { id: 'suiWallet', name: 'Sui Wallet', key: 'suiWallet' }, // official Sui wallet
+      { id: 'sui', name: 'Sui Wallet (Standard)', key: 'sui' },
+      { id: 'suiet', name: 'Suiet', key: 'suiet' },
+      { id: 'ethos', name: 'Ethos', key: 'ethos' },
+      { id: 'martian', name: 'Martian', key: 'martian' },
+      { id: 'nightly', name: 'Nightly', key: 'nightly' },
+      { id: 'suiet', name: 'Suiet (alt)', key: 'suiet' },
+    ];
+
+    const found: Array<{ id: string; name: string; provider: any }> = [];
+    const seen = new Set<any>();
+    for (const c of candidates) {
+      const p = w[c.key];
+      if (p && !seen.has(p)) {
+        seen.add(p);
+        found.push({ id: c.id, name: c.name, provider: p });
+      }
+    }
+
+    // Fallback aggregated array if a wallet injects a list
+    if (Array.isArray(w?.suiWallets)) {
+      for (const p of w.suiWallets) {
+        if (p && !seen.has(p)) {
+          seen.add(p);
+          const name = p?.name || p?.label || 'Injected Wallet';
+          const id = (p?.id || name || 'wallet').toLowerCase().replace(/\s+/g, '-');
+          found.push({ id, name, provider: p });
+        }
+      }
+    }
+
+    return found;
   }
 
   // Initialize Sui client
@@ -51,33 +106,104 @@ class SuiIntegration {
     }
   }
 
-  // Connect wallet (placeholder for actual wallet integration)
-  async connectWallet() {
+  // Connect wallet, auto-prefer Sui Wallet ("Slush") if available. Optionally pass a preferred id.
+  async connectWallet(preferredId?: string) {
     try {
       console.log('🔗 Connecting wallet...');
-{{ ... }}
       
       // Check if Sui wallet is available
-      if (typeof window !== 'undefined' && (window as any).suiWallet) {
-        const wallet = (window as any).suiWallet;
-        await wallet.connect();
-        this.wallet = wallet;
-        console.log('✅ Wallet connected:', wallet.address);
-      } else {
-        // Mock wallet for development
-        this.wallet = {
-          address: '0x' + Array.from({length: 40}, () => 
-            Math.floor(Math.random() * 16).toString(16)).join(''),
-          connected: true
-        };
-        console.log('🔧 Using mock wallet for development');
+      if (typeof window !== 'undefined') {
+        const providers = this.listWalletProviders();
+
+        // Order: preferredId -> Sui Wallet -> others
+        let selected = providers.find(p => preferredId && p.id === preferredId);
+        if (!selected) selected = providers.find(p => p.id === 'suiWallet' || p.id === 'sui');
+        if (!selected) selected = providers[0];
+
+        const injected = selected?.provider;
+        if (injected) {
+          // Try common connect flows
+          if (typeof injected.connect === 'function') {
+            await injected.connect();
+          } else if (injected?.features?.['standard:connect']?.connect) {
+            await injected.features['standard:connect'].connect();
+          } else if (typeof injected.requestPermissions === 'function') {
+            try { await injected.requestPermissions(); } catch {}
+          }
+
+          // Resolve address via common APIs
+          let addr: string | undefined = injected.address;
+          if (!addr && typeof injected.getAccounts === 'function') {
+            const accounts = await injected.getAccounts();
+            addr = accounts?.[0]?.address || accounts?.[0]?.addr || accounts?.[0];
+          } else if (!addr && injected?.features?.['sui:accounts']?.getAccounts) {
+            const accounts = await injected.features['sui:accounts'].getAccounts();
+            addr = accounts?.[0]?.address;
+          }
+
+          if (!addr || !/^0x[a-fA-F0-9]{1,64}$/.test(addr)) {
+            console.warn('⚠️ Connected to wallet but could not determine address.');
+          }
+
+          this.wallet = injected;
+          this.address = addr || null;
+          console.log(`✅ Wallet connected using ${selected?.name || 'Injected Wallet'}:`, this.address || '(unknown)');
+        } else {
+          // Mock wallet for development
+          this.wallet = {
+            address: '0x' + Array.from({ length: 40 }, () =>
+              Math.floor(Math.random() * 16).toString(16)).join(''),
+            connected: true
+          };
+          this.address = this.wallet.address;
+          console.log('🔧 Using mock wallet for development');
+        }
       }
       
-      return this.wallet;
+      return { wallet: this.wallet, address: this.address };
     } catch (error) {
       console.error('❌ Wallet connection failed:', error);
       return null;
     }
+  }
+
+  getAddress(): string | null {
+    return this.address;
+  }
+
+  isConnected(): boolean {
+    return !!this.wallet && (this.address?.startsWith('0x') ?? false);
+  }
+
+  async disconnect() {
+    try {
+      if (this.wallet?.disconnect) {
+        await this.wallet.disconnect();
+      }
+    } catch {}
+    this.wallet = null;
+    this.address = null;
+  }
+
+  // Sign a human-readable message with the wallet (no on-chain gas required)
+  async signMessage(message: string) {
+    if (!this.wallet) throw new Error('Wallet not connected');
+    const bytes = new TextEncoder().encode(message);
+
+    // Try wallet-standard first
+    if (this.wallet?.features?.['sui:signPersonalMessage']?.signPersonalMessage) {
+      const res = await this.wallet.features['sui:signPersonalMessage'].signPersonalMessage({
+        message: bytes,
+      });
+      return res; // contains signature, bytes, address
+    }
+
+    // Fallback to legacy APIs
+    if (typeof this.wallet.signPersonalMessage === 'function') {
+      return await this.wallet.signPersonalMessage({ message: bytes });
+    }
+
+    throw new Error('This wallet does not support signing personal messages');
   }
 
   // Mint carbon credit
