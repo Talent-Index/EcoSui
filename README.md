@@ -29,7 +29,7 @@ EcoSui connects Kenyan communities directly to global carbon markets, enabling r
 ## 🏗️ Project Structure
 
 ```markdown
-EcoSui
+Ecosui/
 ├── .env.example
 ├── index.html
 ├── package.json
@@ -81,32 +81,19 @@ ecosui-move/
 
 ### Contract Configuration
 
-The frontend integrates with the Sui Move package in `ecosui-move/`. After publishing, configure the on-chain package and module names used by the UI utilities in `src/utils/suiIntegration.ts`:
-```typescript
-export const CONTRACT_CONFIG = {
-  // Populated from VITE_SUI_PACKAGE_ID at runtime; replace fallback after publishing
-  PACKAGE_ID: import.meta.env.VITE_SUI_PACKAGE_ID || '0x1234567890abcdef1234567890abcdef12345678',
+The frontend integrates with the Sui Move package in `ecosui-move/`. After publishing, configure the on-chain package and module names used by the UI utilities in `src/utils/suiIntegration.ts`.
 
-  // Module names expected by the frontend utilities
-  CARBON_CREDIT_MODULE: 'carbon_credit',        // wrapper forwarding to carbon_credits
-  EMISSION_TRACKER_MODULE: 'emission_tracker',
-  COMMUNITY_REWARDS_MODULE: 'community_rewards',
+Key envs used at runtime:
 
-  // Optional additional modules available in this package
-  MARKETPLACE_MODULE: 'marketplace',
-  PAYMENTS_MODULE: 'payments',
-  GOVERNANCE_MODULE: 'governance',
-  ADMIN_MODULE: 'admin',
+- `VITE_SUI_PACKAGE_ID` – the package ID returned by `sui client publish`
+- `VITE_SUI_NETWORK` – one of `localnet | devnet | testnet | mainnet`
 
-  // Network is driven by VITE_SUI_NETWORK ('devnet' | 'testnet' | 'mainnet')
-  NETWORK: (import.meta.env.VITE_SUI_NETWORK || 'testnet') as 'devnet' | 'testnet' | 'mainnet',
-};
-```
+Localnet is supported in the codebase. When `VITE_SUI_NETWORK=localnet`, the app uses `http://127.0.0.1:9000` as RPC; otherwise it uses `getFullnodeUrl(<network>)` from `@mysten/sui.js`.
 
 #### Environment variables
 
 - `VITE_SUI_PACKAGE_ID` — set to the returned `PACKAGE_ID` after `sui client publish`.
-- `VITE_SUI_NETWORK` — `'devnet' | 'testnet' | 'mainnet'` (defaults to `testnet`).
+- `VITE_SUI_NETWORK` — `'localnet' | 'devnet' | 'testnet' | 'mainnet'` (defaults to `localnet` in code if not set).
 
 ### Key Functions (by user flow)
 
@@ -134,6 +121,50 @@ export const CONTRACT_CONFIG = {
   - `admin::pause_system(admin_cap, system_config, pause, clock)`
   - `admin::get_system_config(system_config)`
 
+## 🧭 How the smart contracts work (non‑technical)
+
+- **You can measure pollution.** Local youth place simple sensors near factories and rivers. Readings are recorded.
+- **Proof goes on-chain.** Verified readings become on-chain objects (like digital certificates) on Sui.
+- **Credits are created.** These certificates are minted into carbon credits representing real environmental improvement.
+- **Credits are sold.** Buyers (factories, companies) purchase credits to offset emissions.
+- **Money flows transparently.** Proceeds are split automatically: 60% to community health/cleanup funds, 40% to platform upkeep.
+- **Communities decide.** A governance module lets communities propose and vote on how to deploy funds (e.g., clinics, filters, cleanups).
+
+Everything is traceable, fast, and low-cost because it runs on Sui.
+
+## 🧪 Smart contracts (technical overview)
+
+Contracts reside in `ecosui-move/sources/`:
+
+- `admin.move`
+  - Types: `AdminCap`, `SystemConfig`
+  - Admin flows: fee settings, pausing, parameter updates.
+
+- `carbon_credits.move`
+  - Core credit lifecycle: register oracle/community, mint credits from verified data, helper constructors for tests.
+  - Errors are defined as constants for validation paths.
+  - Note: Expose `public entry` functions for CLI/UI invocation in the next milestone.
+
+- `marketplace.move`
+  - Listing and trade execution for `CarbonCredit` objects.
+  - Trade path invokes payments split and transfers credit to buyer.
+
+- `payments.move`
+  - Treasury accounting with `Treasury` and `PlatformTreasury` objects.
+  - Functions for splitting SUI and processing platform funds.
+
+- `governance.move`
+  - `CommunityGovernance`, proposals, votes, and execution logic.
+
+- `emission_tracker.move`, `community_rewards.move`, `carbon_credit.move`
+  - Support modules for data recording, reward events, and credit types.
+
+Design notes:
+
+- Uses Sui object model for asset composability and auditability.
+- Lints like `duplicate_alias` and `self_transfer` are suppressed/acceptable; functional correctness is preserved.
+- Current tests reference internal functions and `test_scenario`; entries will be added to enable direct calls.
+
 ## 🌍 Impact Goals
 
 - **30M+ tons** of CO₂ reduction potential annually
@@ -143,7 +174,7 @@ export const CONTRACT_CONFIG = {
 
 1. **Clone and install**:
    ```bash
-   git clone https://github.com/Talent-Index/EcoSui
+   git clone <repository>
    cd ecosui
    npm install
    ```
@@ -153,10 +184,28 @@ export const CONTRACT_CONFIG = {
    npm run dev
    ```
 
-3. **Configure Sui integration**:
-   - Deploy Move contracts to Sui network
-   - Update `CONTRACT_CONFIG` with actual package IDs
-   - Connect wallet integration (Suiet, Ethos, etc.)
+3. **Configure Sui + Localnet**:
+   - Start localnet with faucet in Terminal A:
+     ```bash
+     sui start --with-faucet
+     ```
+   - In Terminal B, fund an address and select localnet:
+     ```bash
+     sui client switch --env localnet
+     sui client new-address ed25519   # if you need a fresh address
+     sui client faucet
+     ```
+   - Publish contracts (from `ecosui-move/`):
+     ```bash
+     sui move build
+     sui client publish . --gas-budget 100000000
+     ```
+   - Copy `PACKAGE_ID`, then set `.env`:
+     ```
+     VITE_SUI_PACKAGE_ID=<YOUR_PACKAGE_ID>
+     VITE_SUI_NETWORK=localnet
+     ```
+   - Restart frontend: `npm run dev`
 
 ## 🔗 Integration Points
 
@@ -198,11 +247,11 @@ Optimized for all devices:
 Built for production deployment:
 ```bash
 ```
-# Build
-sui move build --path ecosui-move
+# Build (from ecosui-move/)
+sui move build
 
-# Publish (ensure sufficient gas and a current CLI)
-sui client publish --json --skip-fetch-latest-git-deps --gas-budget 50000000 --path ecosui-move
+# Publish to the active env (ensure faucet-funded address on localnet)
+sui client publish . --gas-budget 100000000
 ```
 
 Notes:
@@ -210,6 +259,13 @@ Notes:
 - Ensure your Sui CLI matches the network protocol to avoid system-package warnings.
 - Fund or merge a gas coin large enough for the chosen `--gas-budget`.
 - After publishing, save the returned `PACKAGE_ID` for the frontend config.
+
+## 🗺️ Roadmap
+
+- Add `public entry` functions across modules (mint, list, trade, payout, governance actions) for CLI/frontend calls.
+- Replace frontend mocks in `src/utils/suiIntegration.ts` with programmable transaction calls.
+- Integrate sensor data pipeline/oracle and buyer compliance receipts.
+- Launch pilots in Kibera/Mathare with clinic and river cleanup funding tracked on-chain.
 
 ## Object IDs to Record (post-deploy)
 

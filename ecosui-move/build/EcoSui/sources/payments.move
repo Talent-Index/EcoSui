@@ -1,11 +1,14 @@
 module ecosui::payments {
     use sui::coin::{Self, Coin};
     use sui::sui::SUI;
-    use sui::tx_context::{Self, TxContext};
-    use sui::transfer;
+    
+    
     use sui::event;
-    use sui::object::{Self, UID};
+    
     use sui::clock;
+    use sui::object::{Self as object, UID};
+    use sui::transfer::{Self as transfer};
+    use sui::tx_context::{Self as tx_context, TxContext};
 
     // ===== STRUCTURES =====
     
@@ -36,16 +39,12 @@ module ecosui::payments {
     }
 
     // ===== CONSTANTS =====
-    
     const COMMUNITY_SHARE_PERCENT: u64 = 60;
     const PLATFORM_SHARE_PERCENT: u64 = 40;
     const ERROR_INSUFFICIENT_FUNDS: u64 = 200;
     const ERROR_UNAUTHORIZED: u64 = 201;
 
-    // ===== EVENTS =====
-
     // ===== INITIALIZATION =====
-    
     fun init(ctx: &mut TxContext) {
         let treasury = Treasury {
             id: object::new(ctx),
@@ -92,7 +91,7 @@ module ecosui::payments {
         });
     }
 
-    public entry fun process_platform_payment(
+    public fun process_platform_payment(
         treasury: &mut Treasury,
         platform_treasury: &mut PlatformTreasury,
         platform_payment: Coin<SUI>,
@@ -110,7 +109,7 @@ module ecosui::payments {
 
     // ===== TREASURY MANAGEMENT =====
     
-    public entry fun withdraw_platform_funds(
+    public fun withdraw_platform_funds(
         platform_treasury: &mut PlatformTreasury,
         treasury: &mut Treasury,
         amount: u64,

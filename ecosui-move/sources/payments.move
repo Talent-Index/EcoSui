@@ -39,16 +39,12 @@ module ecosui::payments {
     }
 
     // ===== CONSTANTS =====
-    
     const COMMUNITY_SHARE_PERCENT: u64 = 60;
-    const _PLATFORM_SHARE_PERCENT: u64 = 40;
+    const PLATFORM_SHARE_PERCENT: u64 = 40;
     const ERROR_INSUFFICIENT_FUNDS: u64 = 200;
     const ERROR_UNAUTHORIZED: u64 = 201;
 
-    // ===== EVENTS =====
-
     // ===== INITIALIZATION =====
-    
     fun init(ctx: &mut TxContext) {
         let treasury = Treasury {
             id: object::new(ctx),

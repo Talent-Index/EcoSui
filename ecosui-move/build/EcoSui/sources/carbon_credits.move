@@ -1,10 +1,13 @@
 module ecosui::carbon_credits {
-    use sui::object::{Self, UID, ID};
-    use sui::transfer;
-    use sui::tx_context::{Self, TxContext};
+    
+    
+    
     use sui::event;
     use std::string::String;
     use sui::clock;
+    use sui::object::{Self as object, UID, ID};
+    use sui::transfer::{Self as transfer};
+    use sui::tx_context::{Self as tx_context, TxContext};
 
     // ===== STRUCTURES =====
     
@@ -86,7 +89,7 @@ module ecosui::carbon_credits {
 
     // ===== ORACLE MANAGEMENT =====
     
-    public entry fun register_oracle(
+    public fun register_oracle(
         _admin_cap: &AdminCap,
         oracle_address: address,
         name: String,
@@ -105,7 +108,7 @@ module ecosui::carbon_credits {
         });
     }
 
-    public entry fun deactivate_oracle(
+    public fun deactivate_oracle(
         _admin_cap: &AdminCap,
         oracle: &mut Oracle
     ) {
@@ -114,7 +117,7 @@ module ecosui::carbon_credits {
 
     // ===== COMMUNITY REGISTRATION =====
     
-    public entry fun register_community(
+    public fun register_community(
         _admin_cap: &AdminCap,
         community_id: u64,
         name: String,
@@ -141,7 +144,7 @@ module ecosui::carbon_credits {
 
     // ===== CORE MINTING FUNCTION =====
     
-    public entry fun mint_carbon_credit(
+    public fun mint_carbon_credit(
         oracle: &mut Oracle,
         community: &mut Community,
         pollution_type: u8,
@@ -189,7 +192,7 @@ module ecosui::carbon_credits {
 
     // ===== CREDIT MANAGEMENT =====
     
-    public entry fun deactivate_credit(
+    public fun deactivate_credit(
         credit: &mut CarbonCredit,
         oracle: &Oracle,
         clock: &clock::Clock,
