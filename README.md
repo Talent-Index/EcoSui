@@ -29,7 +29,7 @@ EcoSui connects Kenyan communities directly to global carbon markets, enabling r
 ## 🏗️ Project Structure
 
 ```markdown
-.
+EcoSui
 ├── .env.example
 ├── index.html
 ├── package.json
@@ -143,7 +143,7 @@ export const CONTRACT_CONFIG = {
 
 1. **Clone and install**:
    ```bash
-   git clone <repository>
+   git clone https://github.com/Talent-Index/EcoSui
    cd ecosui
    npm install
    ```
