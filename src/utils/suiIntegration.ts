@@ -4,7 +4,7 @@ import { SuiClient, getFullnodeUrl } from '@mysten/sui.js/client'; // ✅ CORREC
 // Contract configuration
 export const CONTRACT_CONFIG = {
   // Replace with your actual package ID after deployment
-  PACKAGE_ID: '0x1234567890abcdef1234567890abcdef12345678',
+  PACKAGE_ID: (import.meta as any)?.env?.VITE_SUI_PACKAGE_ID || '0x1234567890abcdef1234567890abcdef12345678',
   
   // Contract addresses
   CARBON_CREDIT_MODULE: 'carbon_credit',
@@ -12,34 +12,15 @@ export const CONTRACT_CONFIG = {
   COMMUNITY_REWARDS_MODULE: 'community_rewards',
   
   // Network configuration
-  NETWORK: 'testnet', // Change to 'mainnet' for production
-  RPC_URL: getFullnodeUrl('testnet')
+  NETWORK: (((import.meta as any)?.env?.VITE_SUI_NETWORK) || 'testnet') as 'devnet' | 'testnet' | 'mainnet',
+  RPC_URL: getFullnodeUrl((((import.meta as any)?.env?.VITE_SUI_NETWORK) || 'testnet') as 'devnet' | 'testnet' | 'mainnet')
 };
 
 // Types for Sui integration
 export interface CarbonCredit {
   id: string;
   amount: number;
-  timestamp: number;
-  location: string;
-  verifier: string;
-  community_id: string;
-  emission_data: EmissionData;
-}
-
-export interface EmissionData {
-  co2_level: number;
-  particulate_matter: number;
-  temperature: number;
-  humidity: number;
-  sensor_id: string;
-  timestamp: number;
-}
-
-export interface CommunityReward {
-  community_id: string;
-  total_earned: number;
-  health_fund_allocation: number;
+{{ ... }}
   development_fund_allocation: number;
   last_updated: number;
 }
@@ -48,6 +29,10 @@ export interface CommunityReward {
 class SuiIntegration {
   private client: SuiClient | null = null;
   private wallet: any = null;
+  private isConfigured(): boolean {
+    const id = CONTRACT_CONFIG.PACKAGE_ID;
+    return typeof id === 'string' && id.startsWith('0x') && id.length > 3 && id !== '0x1234567890abcdef1234567890abcdef12345678';
+  }
 
   // Initialize Sui client
   async initialize() {
@@ -56,6 +41,9 @@ class SuiIntegration {
         url: CONTRACT_CONFIG.RPC_URL
       });
       console.log('✅ Sui client initialized successfully');
+      if (!this.isConfigured()) {
+        console.warn('⚠️ EcoSui mock mode: set VITE_SUI_PACKAGE_ID and VITE_SUI_NETWORK to enable live contract calls.');
+      }
       return true;
     } catch (error) {
       console.error('❌ Failed to initialize Sui client:', error);
@@ -67,6 +55,7 @@ class SuiIntegration {
   async connectWallet() {
     try {
       console.log('🔗 Connecting wallet...');
+{{ ... }}
       
       // Check if Sui wallet is available
       if (typeof window !== 'undefined' && (window as any).suiWallet) {

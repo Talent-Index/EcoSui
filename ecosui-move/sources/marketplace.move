@@ -8,6 +8,9 @@ module ecosui::marketplace {
     use ecosui::carbon_credits::{CarbonCredit, Community};
     use ecosui::payments;
     use sui::clock;
+    use sui::object::{Self as object, UID, ID};
+    use sui::transfer::{Self as transfer};
+    use sui::tx_context::{Self as tx_context, TxContext};
 
     // ===== STRUCTURES =====
     

@@ -6,6 +6,9 @@ module ecosui::payments {
     use sui::event;
     
     use sui::clock;
+    use sui::object::{Self as object, UID};
+    use sui::transfer::{Self as transfer};
+    use sui::tx_context::{Self as tx_context, TxContext};
 
     // ===== STRUCTURES =====
     

@@ -5,6 +5,9 @@ module ecosui::carbon_credits {
     use sui::event;
     use std::string::String;
     use sui::clock;
+    use sui::object::{Self as object, UID, ID};
+    use sui::transfer::{Self as transfer};
+    use sui::tx_context::{Self as tx_context, TxContext};
 
     // ===== STRUCTURES =====
     

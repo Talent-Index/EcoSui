@@ -28,58 +28,116 @@ EcoSui connects Kenyan communities directly to global carbon markets, enabling r
 
 ## 🏗️ Project Structure
 
-```
-src/
-├── components/          # React components
-│   ├── Header.tsx      # Navigation and branding
-│   ├── HeroSection.tsx # Main landing section
-│   ├── ProblemSection.tsx # Problem showcase
-│   ├── SolutionSection.tsx # Solution presentation
-│   ├── BlockchainSection.tsx # Blockchain integration info
-│   ├── CommunitySection.tsx # Community impact
-│   ├── ContactSection.tsx # Contact form
-│   └── Footer.tsx      # Footer navigation
-├── utils/
-│   └── suiIntegration.ts # Sui blockchain utilities
-├── App.tsx             # Main application
-└── main.tsx           # Application entry point
+```markdown
+.
+├── .env.example
+├── index.html
+├── package.json
+├── package-lock.json
+├── vite.config.ts
+├── tailwind.config.js
+├── postcss.config.js
+├── tsconfig.json
+├── tsconfig.app.json
+├── tsconfig.node.json
+├── src/
+│   ├── App.tsx
+│   ├── index.css
+│   ├── main.tsx
+│   ├── vite-env.d.ts
+│   ├── utils/
+│   │   └── suiIntegration.ts
+│   └── components/
+│       ├── Header.tsx
+│       ├── HeroSection.tsx
+│       ├── ProblemSection.tsx
+│       ├── SolutionSection.tsx
+│       ├── BlockchainSection.tsx
+│       ├── CommunitySection.tsx
+│       ├── ContactSection.tsx
+│       └── Footer.tsx
+
+ecosui-move/
+├── Move.toml
+├── Move.lock
+├── sources/
+│   ├── admin.move
+│   ├── carbon_credit.move
+│   ├── carbon_credits.move
+│   ├── community_rewards.move
+│   ├── emission_tracker.move
+│   ├── governance.move
+│   ├── marketplace.move
+│   └── payments.move
+├── scripts/
+│   ├── deploy.sh
+│   └── test.sh
+├── tests/
+│   └── test_ecosui.move
+└── build/        # Generated artifacts (omitted for brevity)
 ```
 
 ## 🔧 Smart Contract Integration
 
 ### Contract Configuration
 
-The application is configured to integrate with Sui Move contracts:
-
+The frontend integrates with the Sui Move package in `ecosui-move/`. After publishing, configure the on-chain package and module names used by the UI utilities in `src/utils/suiIntegration.ts`:
 ```typescript
-const CONTRACT_CONFIG = {
-  PACKAGE_ID: '0x1234567890abcdef1234567890abcdef12345678',
-  MODULES: {
-    CARBON_CREDIT: 'carbon_credit',
-    EMISSION_TRACKER: 'emission_tracker',
-    COMMUNITY_REWARDS: 'community_rewards'
-  }
+export const CONTRACT_CONFIG = {
+  // Populated from VITE_SUI_PACKAGE_ID at runtime; replace fallback after publishing
+  PACKAGE_ID: import.meta.env.VITE_SUI_PACKAGE_ID || '0x1234567890abcdef1234567890abcdef12345678',
+
+  // Module names expected by the frontend utilities
+  CARBON_CREDIT_MODULE: 'carbon_credit',        // wrapper forwarding to carbon_credits
+  EMISSION_TRACKER_MODULE: 'emission_tracker',
+  COMMUNITY_REWARDS_MODULE: 'community_rewards',
+
+  // Optional additional modules available in this package
+  MARKETPLACE_MODULE: 'marketplace',
+  PAYMENTS_MODULE: 'payments',
+  GOVERNANCE_MODULE: 'governance',
+  ADMIN_MODULE: 'admin',
+
+  // Network is driven by VITE_SUI_NETWORK ('devnet' | 'testnet' | 'mainnet')
+  NETWORK: (import.meta.env.VITE_SUI_NETWORK || 'testnet') as 'devnet' | 'testnet' | 'mainnet',
 };
 ```
 
-### Key Functions
+#### Environment variables
 
-- `mint_carbon_credit()` - Create carbon credits from verified data
-- `trade_credit()` - Execute peer-to-peer trading
-- `verify_emission()` - Validate IoT sensor data
-- `distribute_rewards()` - Auto-distribute community payments
+- `VITE_SUI_PACKAGE_ID` — set to the returned `PACKAGE_ID` after `sui client publish`.
+- `VITE_SUI_NETWORK` — `'devnet' | 'testnet' | 'mainnet'` (defaults to `testnet`).
 
-## 📊 Business Model
+### Key Functions (by user flow)
 
-- **5% transaction fee** on all carbon credit trades
-- **60% reinvestment** into community health clinics
-- **40% platform development** and expansion
+- **Minting and verification**
+  - `emission_tracker::verify_emission_data(...)` records sensor data on-chain.
+
+- **Marketplace trading**
+  - `marketplace::create_listing(marketplace, credit, price, clk, ctx)` creates a listing for a `CarbonCredit`.
+  - `marketplace::execute_trade(marketplace, listing, credit, community, payment, clk, ctx)` distributes payment (60% community, 40% platform), transfers credit, updates stats.
+  - `marketplace::cancel_listing(marketplace, listing, clk, ctx)` cancels an active listing by its seller.
+
+- **Community rewards and treasury**
+  - `community_rewards::distribute_rewards(community_id, amount, clk)` emits a distribution event (60/40 report).
+  - `payments::distribute_payment(payment, amount, community_address, clk, ctx)` splits SUI payment (60/40) and transfers community share.
+  - `payments::process_platform_payment(treasury, platform_treasury, platform_payment, ctx)` accounts platform funds.
+  - `payments::withdraw_platform_funds(platform_treasury, treasury, amount, recipient, clk, ctx)` withdraws platform funds.
+
+- **Governance**
+  - `governance::create_proposal(governance, title, description, amount_requested, voting_duration_days, clk, ctx)`
+  - `governance::cast_vote(governance, proposal, vote_type, weight, clk, ctx)`
+  - `governance::execute_proposal(governance, proposal, clk)`
+
+- **Admin & config**
+  - `admin::update_system_config(admin_cap, system_config, fee_percentage, max_credit_amount, min_credit_amount)`
+  - `admin::pause_system(admin_cap, system_config, pause, clock)`
+  - `admin::get_system_config(system_config)`
 
 ## 🌍 Impact Goals
 
 - **30M+ tons** of CO₂ reduction potential annually
 - **200+ factories** in Nairobi industrial zone
-- **19K+ lives** potentially improved through cleaner air
 
 ## 🚀 Getting Started
 
